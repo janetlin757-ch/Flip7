@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-page-node-id="0hwySeVSmCi8E2GpxnhpH0"><head data-page-node-id="skDnH9CAkFzS8MGSciL3Lc">
+<meta charset="UTF-8" data-page-node-id="DZfHh9WkLGSo731q4eKtBk">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" data-page-node-id="VNqFKeqYVkzSK5jGpsxl23">
+<title data-page-node-id="xhiLf718f6eJfC3akkNKe4">FLIP 7 记分牌</title>
+<style data-page-node-id="rP2gO0WLlHIFvt6Jgp4WjB">
+  :root{
+    --teal:#1F8C84;
+    --teal-dark:#156159;
+    --cream:#F6EEDB;
+    --purple:#3B2A6B;
+    --gold:#F4C84B;
+    --pink:#E8739B;
+    --ink:#2A2140;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;height:100%;}
+  body{
+    font-family:-apple-system,"Helvetica Neue",Arial,"PingFang SC","Microsoft YaHei",sans-serif;
+    font-weight:bold;
+    background-color:var(--teal);
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.07'/%3E%3C/svg%3E");
+    color:var(--ink);
+    display:flex; justify-content:center;
+    overscroll-behavior:none;
+  }
+  #app{
+    width:100%; max-width:430px; height:100vh; height:100dvh; overflow:hidden;
+    padding:18px 16px calc(18px + env(safe-area-inset-bottom));
+    display:flex; flex-direction:column;
+  }
+  .page{display:none; flex-direction:column; flex:1; height:100%; overflow:hidden; gap:14px; padding:0 4px 8px; animation:fade .25s ease;}
+  .page.active{display:flex;}
+  @keyframes fade{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:none;}}
+
+  /* ---------- 品牌字 ---------- */
+  .brand{
+    font-family:"Arial Black",Impact,"Helvetica Neue",sans-serif;
+    font-size:30px; letter-spacing:1px; text-align:center;
+    color:var(--gold);
+    -webkit-text-stroke:3px var(--purple);
+    text-shadow:3px 3px 0 var(--pink), 5px 5px 0 var(--purple);
+    margin-bottom:2px;
+  }
+  .brand-mini{
+    font-family:"Arial Black",Impact,sans-serif; font-size:35px;
+    color:var(--gold); -webkit-text-stroke:2px var(--purple);
+    text-shadow:2px 2px 0 var(--purple);
+  }
+  .subtitle{
+    text-align:center; font-family:"Arial Black",Impact,sans-serif;
+    color:var(--cream); letter-spacing:3px; font-size:14px;
+    text-transform:uppercase; margin-top:-2px;
+  }
+
+  /* ---------- 通用面板 / 卡片（贴纸印刷风） ---------- */
+  .panel,.player-card,.rank-card{
+    background:var(--cream);
+    border:3px solid var(--purple);
+    border-radius:14px;
+    box-shadow:6px 6px 0 rgba(59,42,107,.9);
+  }
+  .panel{padding:20px 16px 25px; display:flex; flex-direction:column; gap:30px;}
+
+  /* ---------- 设置页 ---------- */
+  .setup-row{display:flex; align-items:center; justify-content:space-between;}
+  .setup-label{font-size:18px; font-weight:700; color:var(--purple); letter-spacing:1px;}
+  .stepper{display:flex; align-items:center; gap:14px;}
+  .step-btn{
+    width:46px; height:46px; font-size:26px; font-weight:900;
+    background:var(--gold); color:var(--purple);
+    border:3px solid var(--purple); border-radius:12px;
+    box-shadow:3px 3px 0 var(--purple); cursor:pointer; line-height:1;
+  }
+  .step-btn:active{transform:translate(2px,2px); box-shadow:1px 1px 0 var(--purple);}
+  .step-val{min-width:54px; text-align:center; font-family:"Arial Black",Impact,sans-serif;
+    font-size:28px; color:var(--purple);}
+
+  /* ---------- 按钮 ---------- */
+  .btn-primary{
+    font-family:"Arial Black",Impact,sans-serif; font-size:21px; letter-spacing:1px; font-weight:600;
+    background:var(--gold); color:var(--purple);
+    border:3px solid var(--purple); border-radius:14px;
+    padding:12px; box-shadow:5px 5px 0 var(--purple); cursor:pointer;
+  }
+  .btn-primary:active{transform:translate(3px,3px); box-shadow:2px 2px 0 var(--purple);}
+  .btn-secondary{
+    font-family:"Arial Black",Impact,sans-serif; font-size:16px; letter-spacing:1px; font-weight:500;
+    background:var(--cream); color:var(--purple);
+    border:3px solid var(--purple); border-radius:12px;
+    padding:13px; box-shadow:4px 4px 0 var(--purple); cursor:pointer;
+  }
+  .btn-secondary:active{transform:translate(2px,2px); box-shadow:2px 2px 0 var(--purple);}
+  .btn-secondary:disabled{opacity:.4; box-shadow:2px 2px 0 var(--purple);}
+  .hint{text-align:center; color:var(--cream); font-size:13px; opacity:.9; letter-spacing:.5px;}
+
+  /* ---------- 缎带标题 ---------- */
+  .ribbon{
+    background:var(--gold); border:3px solid var(--purple); color:var(--purple);
+    font-family:"Arial Black",Impact,sans-serif; text-align:center;
+    padding:13px; border-radius:10px; font-size:20px; letter-spacing:1px; font-weight:500;
+    box-shadow:4px 4px 0 var(--purple); transform:rotate(0deg);
+  }
+
+  /* ---------- 录入页 玩家列表 ---------- */
+  .player-list{display:grid; grid-template-columns:repeat(2,1fr); gap:10px; flex:1; min-height:0; overflow-y:auto; align-content:start; padding:4px 10px 12px 4px;}
+  .player-card{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 16px; cursor:pointer; transition:transform .08s;
+  }
+  .player-card.sel{background:var(--gold); transform:scale(1.02);}
+  .pname{
+    font-family:"Arial Black",Impact,sans-serif; font-size:20px; color:var(--purple);
+    background:rgba(59,42,107,.10); border:2px solid var(--purple);
+    border-radius:9px; padding:4px 12px;
+  }
+  .pscore{font-family:"Arial Black",Impact,sans-serif; font-size:30px; color:var(--purple); min-width:64px; text-align:right;}
+  .player-card.sel .pscore{color:var(--ink);}
+
+  /* ---------- 数字键盘 ---------- */
+  .keypad{display:grid; grid-template-columns:repeat(4,1fr); gap:7px;}
+  .key{
+    font-family:"Arial Black",Impact,sans-serif; font-size:21px; color:var(--purple);
+    background:var(--cream); border:3px solid var(--purple); border-radius:10px;
+    padding:7px 0; box-shadow:3px 3px 0 var(--purple); cursor:pointer;
+    touch-action:manipulation;
+  }
+  .key:active{transform:translate(2px,2px); box-shadow:1px 1px 0 var(--purple);}
+  .key.op{background:var(--purple); color:var(--gold); box-shadow:3px 3px 0 var(--gold);}
+  .key.op:active{transform:translate(2px,2px); box-shadow:1px 1px 0 var(--gold);}
+  .key.wide{grid-column:span 1;}
+  /* ---------- 计算器面板 ---------- */
+  .calc{background:var(--ink); border:3px solid var(--purple); border-radius:10px; padding:5px 12px; box-shadow:3px 3px 0 var(--purple); margin-bottom:0px;}
+  .calc-expr{color:var(--cream); font-size:12px; min-height:15px; text-align:right; opacity:.85; letter-spacing:1px; word-break:break-all;}
+  .calc-val{color:#fff; font-family:"Arial Black",Impact,sans-serif; font-size:24px; text-align:right; line-height:1.15;}
+
+  /* ---------- 结果页 ---------- */
+  .topbar{display:flex; align-items:center; justify-content:space-between; margin-bottom:2px;}
+  .link-btn{
+    font-family:"Arial Black",Impact,sans-serif; font-size:14px; letter-spacing:1px; font-weight:500;
+    background:var(--cream); color:var(--purple); border:3px solid var(--purple);
+    border-radius:10px; padding:8px 14px; box-shadow:3px 3px 0 var(--purple); cursor:pointer;
+  }
+  .link-btn:active{transform:translate(2px,2px); box-shadow:1px 1px 0 var(--purple);}
+  .trophy{width:34px; height:34px;}
+  .banner{
+    text-align:center; font-family:"Arial Black",Impact,sans-serif;
+    font-size:22px; letter-spacing:1px; padding:14px; border-radius:12px;
+    margin:2px 8px 6px;
+    border:3px solid var(--purple); box-shadow:5px 5px 0 var(--purple);
+  }
+  .banner.win{background:var(--gold); color:var(--purple); transform:rotate(-1deg);}
+  .banner.lead{background:var(--cream); color:var(--purple); font-weight:600;}
+  .rank-list{display:flex; flex-direction:column; gap:10px; flex:1; min-height:0; overflow:auto; padding:4px 10px 12px 4px;}
+  .rank-card{display:flex; align-items:center; gap:12px; padding:13px 15px;}
+  .rank-card.win{background:var(--purple); border-color:var(--gold); box-shadow:6px 6px 0 var(--gold);}
+  .rank-card.win .pname,
+  .rank-card.win .ptotal{color:var(--cream);}
+  .rank-card.win .bar{background:rgba(246,238,219,.22); border-color:var(--cream);}
+  .rank-card.win .lead-ico svg{stroke:var(--gold);}
+  .bar{flex:1; height:18px; background:rgba(59,42,107,.15); border:2px solid var(--purple); border-radius:9px; overflow:hidden;}
+  .fill{height:100%; border-radius:7px 0 0 7px; transition:width .4s ease;}
+  .ptotal{font-family:"Arial Black",Impact,sans-serif; font-size:22px; color:var(--purple); min-width:50px; text-align:right;}
+  .actions{display:flex; flex-direction:column; gap:10px;}
+
+  /* 结果页：获胜庆祝 & 领先区分 */
+  .confetti-canvas{position:fixed; inset:0; width:100%; height:100%; pointer-events:none; z-index:60; display:none;}
+  .confetti-canvas.show{display:block;}
+  .banner.win{font-size:26px; animation:pop .5s ease;}
+  @keyframes pop{0%{transform:scale(.6) rotate(-4deg); opacity:0;}60%{transform:scale(1.08) rotate(-1deg);}100%{transform:scale(1) rotate(-1deg); opacity:1;}}
+  .rank-card.lead-row{border-color:var(--gold); box-shadow:6px 6px 0 var(--gold);}
+  .banner svg{vertical-align:middle; margin-right:6px;}
+  .lead-ico{margin-left:6px; flex:0 0 auto;}
+
+  .hidden{display:none !important;}
+  #page-setup{overflow-y:auto;}
+</style>
+<style id="__dm_no_drag_style__">* { -webkit-user-drag: none !important; }</style><style id="__dm_bindable_badge_style__">[data-sp-bindable="database"]{outline:1px dashed #0088ff;outline-offset:2px;border-radius:4px;}[data-sp-bindable="database"] *{pointer-events:none !important;transition:none !important;animation:none !important;}[data-sp-bindable="database"]{transition:none !important;animation:none !important;}</style></head>
+<body data-page-node-id="Ylhe2w51eO3u3bYXYrusyn" style="">
+<div id="app" data-page-node-id="2kWbWkM2NYojclC71EUGnK">
+
+  <!-- ============ 设置页 ============ -->
+  <section id="page-setup" class="page active" data-page-node-id="WECiksfTYftLcMokOtXPTI">
+    <div class="brand" data-page-node-id="6bwCAnlkbiBMZdr9t4PjuZ" style="font-size: 64px;">FLIP 7</div>
+    <div class="subtitle" data-page-node-id="gZ5xclqkByU47dmRy1LxbX">记分牌 · Score Board</div>
+    <div class="panel" data-page-node-id="z6Nc5cHpfYl2xVQLlLaOE9">
+      <div class="setup-row" data-page-node-id="Zcn4guw39cTfiS5tyQmhAg">
+        <span class="setup-label" data-page-node-id="Qn4KLc2FfOvzIwYgq4hr8X">玩家人数</span>
+        <div class="stepper" data-page-node-id="ibxbpFFApiEs4o3042haxk">
+          <button class="step-btn" data-act="numMinus" data-page-node-id="YdYDNNwqaThdEEpUjiwGTN">−</button>
+          <span class="step-val" id="numVal" data-page-node-id="OcZP0UvNbojiVL2H9LAdhV">4</span>
+          <button class="step-btn" data-act="numPlus" data-page-node-id="lAh0Om7Rot0a9PsbIB5cqC">+</button>
+        </div>
+      </div>
+      <div class="setup-row" data-page-node-id="46JpCzroWGJayYVzMYDGBs">
+        <span class="setup-label" data-page-node-id="EN20l8HYNmWsQ5y9YVH80G">目标分数</span>
+        <div class="stepper" data-page-node-id="AmBa2xrhTh7mt7YxuPS4rv">
+          <button class="step-btn" data-act="targetMinus" data-page-node-id="KE1dIthuGKMotu8wHcUD0F">−</button>
+          <span class="step-val" id="targetVal" data-page-node-id="F5h9h4UmMP0WuzNFzJXkmt">200</span>
+          <button class="step-btn" data-act="targetPlus" data-page-node-id="CR7cSmus4rUqmB9Jwy1QOz">+</button>
+        </div>
+      </div>
+    </div>
+    <button class="btn-primary" data-act="start" data-page-node-id="IKAIgqQCXwCJdrYWRzrBJU">开始游戏</button>
+    <p class="hint" data-page-node-id="AIaYG9PXRmBYwwHqWHfokr">逐轮为每位玩家录入得分 · 率先达到目标分者获胜</p>
+  </section>
+
+  <!-- ============ 录入页 ============ -->
+  <section id="page-entry" class="page" data-page-node-id="cDA2NPsrX2Ewq6naJZWTd0">
+    <div class="ribbon" id="entryRound" data-page-node-id="s3JCrWEVYr8PesNsMAXihi">第 1 轮 · 录入本轮得分</div>
+    <div class="player-list" id="playerList" data-page-node-id="MniuYsLhEfHBg7zKQe5cbw"></div>
+    <div class="calc" data-page-node-id="calcPanel">
+      <div class="calc-expr" id="calcExpr">0</div>
+      <div class="calc-val" id="calcVal">0</div>
+    </div>
+    <div class="keypad" data-page-node-id="H8tgLCqOlPNzF0nzngO4xR">
+      <button class="key" data-key="7">7</button>
+      <button class="key" data-key="8">8</button>
+      <button class="key" data-key="9">9</button>
+      <button class="key op" data-key="div">÷</button>
+      <button class="key" data-key="4">4</button>
+      <button class="key" data-key="5">5</button>
+      <button class="key" data-key="6">6</button>
+      <button class="key op" data-key="mul">×</button>
+      <button class="key" data-key="1">1</button>
+      <button class="key" data-key="2">2</button>
+      <button class="key" data-key="3">3</button>
+      <button class="key op" data-key="sub">−</button>
+      <button class="key op" data-key="clear">C</button>
+      <button class="key" data-key="0">0</button>
+      <button class="key op" data-key="eq">=</button>
+      <button class="key op" data-key="add">+</button>
+    </div>
+    <button class="btn-primary" data-act="confirm" data-page-node-id="gQjt31UyQIodpLJIe4xEua">确认</button>
+  </section>
+
+  <!-- ============ 排名页 ============ -->
+  <section id="page-result" class="page" data-page-node-id="hkO6pXRM5dtAsF2AsJtpWj">
+    <div class="topbar" data-page-node-id="Uta6GeiEyxT4MubNH0GCGd">
+      <button class="link-btn" data-act="restart" data-page-node-id="WDmyrBIkBUzy8EXHsggkWq">重新开始</button>
+      <div class="brand-mini" data-page-node-id="r0Pp7OnKWPUpMAoYUHqUy3">FLIP 7</div>
+      <div class="trophy hidden" id="trophy" data-page-node-id="1rqbPuAFoL3C1jDWmiFZ6F">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#3B2A6B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="34" height="34" data-page-node-id="jdFlnjDFi0OB2fNRzJ6i4f">
+          <path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0V4z" data-page-node-id="aHdHuw5uKmd9y6sD069OLq"></path>
+          <path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3" data-page-node-id="AuIA4sz20Ld8K3v3biWIXs"></path>
+        </svg>
+      </div>
+    </div>
+    <div class="banner" id="banner" data-page-node-id="VJ7Q1Vlj0khVmBbhJWIOus"></div>
+    <div class="rank-list" id="rankList" data-page-node-id="lImlPiGLZjAiJuBELuRuby"></div>
+    <div class="actions" data-page-node-id="bfbAi6a0Z8cvwinExX4BFT">
+      <button class="btn-primary hidden" id="btnContinue" data-act="continue" data-page-node-id="3clRG9CK96p39hJsZSLPOI">继续下一轮</button>
+      <button class="btn-primary hidden" id="btnAgain" data-act="again" data-page-node-id="KduZb8T9lWw1sDN8guwc3e">再来一局</button>
+      <button class="btn-secondary" id="btnUndo" data-act="undo" data-page-node-id="bPkjHzCa973S1lF2HEg0aL">撤销上一轮</button>
+    </div>
+  </section>
+
+</div>
+
+<canvas id="confetti" class="confetti-canvas"></canvas>
+
+<script data-page-node-id="Da2zmdGK4VVlJ2IEIDqRqp">
+(function(){
+  "use strict";
+  var STORE="flip7_scoreboard_v1";
+  var ACCENT=["#E2503F","#3E8BC0","#5BA85B","#E8943B","#C7548E","#46B3A5","#E9C24B","#7E5BA6"];
+
+  function defaultState(){
+    return {numPlayers:4,target:200,totals:[],currentRound:[],roundNo:1,
+            selected:0,history:[],page:"setup",winner:-1};
+  }
+  var state=defaultState();
+
+  function save(){ try{ localStorage.setItem(STORE,JSON.stringify(state)); }catch(e){} }
+  function load(){
+    try{
+      var s=JSON.parse(localStorage.getItem(STORE));
+      if(s&&typeof s==="object"){ state=Object.assign(defaultState(),s); }
+    }catch(e){}
+  }
+
+  function clamp(v,min,max){ return Math.max(min,Math.min(max,v)); }
+  function getWinner(){
+    var best=-1,bt=-1;
+    for(var i=0;i<state.totals.length;i++){
+      if(state.totals[i]>=state.target && state.totals[i]>bt){ bt=state.totals[i]; best=i; }
+    }
+    return best;
+  }
+  function getLeader(){
+    var best=0;
+    for(var i=1;i<state.totals.length;i++){ if(state.totals[i]>state.totals[best]) best=i; }
+    return best;
+  }
+
+  /* ---------- 音效：Web Audio 合成号角 ---------- */
+  var audioCtx;
+  function playFanfare(){
+    try{
+      audioCtx = audioCtx || new (window.AudioContext||window.webkitAudioContext)();
+      if(audioCtx.state==="suspended") audioCtx.resume();
+      var now=audioCtx.currentTime;
+      var notes=[523.25,659.25,783.99,1046.50];
+      notes.forEach(function(f,idx){
+        var o=audioCtx.createOscillator(), g=audioCtx.createGain();
+        o.type="triangle"; o.frequency.value=f;
+        var t=now+idx*0.14;
+        g.gain.setValueAtTime(0.0001,t);
+        g.gain.exponentialRampToValueAtTime(0.3,t+0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001,t+0.30);
+        o.connect(g); g.connect(audioCtx.destination);
+        o.start(t); o.stop(t+0.32);
+      });
+    }catch(e){}
+  }
+
+  /* ---------- 获胜彩带 ---------- */
+  var confettiCanvas, confettiCtx, confettiParticles=[], confettiRAF;
+  function launchConfetti(){
+    confettiCanvas = confettiCanvas || document.getElementById("confetti");
+    if(!confettiCanvas) return;
+    var dpr=window.devicePixelRatio||1;
+    confettiCanvas.width=window.innerWidth*dpr;
+    confettiCanvas.height=window.innerHeight*dpr;
+    confettiCtx=confettiCanvas.getContext("2d");
+    confettiCtx.setTransform(dpr,0,0,dpr,0,0);
+    var colors=["#F4C84B","#E2503F","#3E8BC0","#5BA85B","#E8739B","#46B3A5","#E9C24B","#7E5BA6"];
+    var W=window.innerWidth, H=window.innerHeight;
+    confettiParticles=[];
+    for(var i=0;i<150;i++){
+      confettiParticles.push({
+        x:W/2+(Math.random()-0.5)*W*0.35, y:H*0.22,
+        vx:(Math.random()-0.5)*9, vy:Math.random()*-7-3,
+        g:0.16+Math.random()*0.12, size:5+Math.random()*7,
+        rot:Math.random()*360, vr:(Math.random()-0.5)*22,
+        color:colors[i%colors.length], shape:Math.random()<0.5?"r":"c"
+      });
+    }
+    confettiCanvas.classList.add("show");
+    if(confettiRAF) cancelAnimationFrame(confettiRAF);
+    animateConfetti();
+  }
+  function animateConfetti(){
+    var W=window.innerWidth, H=window.innerHeight;
+    confettiCtx.clearRect(0,0,W,H);
+    var alive=0;
+    for(var i=0;i<confettiParticles.length;i++){
+      var p=confettiParticles[i];
+      p.vy+=p.g; p.x+=p.vx; p.y+=p.vy; p.rot+=p.vr; p.vx*=0.99;
+      if(p.y<H+30){
+        alive++;
+        confettiCtx.save();
+        confettiCtx.translate(p.x,p.y);
+        confettiCtx.rotate(p.rot*Math.PI/180);
+        confettiCtx.fillStyle=p.color;
+        if(p.shape==="r") confettiCtx.fillRect(-p.size/2,-p.size/2,p.size,p.size*0.6);
+        else{ confettiCtx.beginPath(); confettiCtx.arc(0,0,p.size/2,0,Math.PI*2); confettiCtx.fill(); }
+        confettiCtx.restore();
+      }
+    }
+    if(alive>0) confettiRAF=requestAnimationFrame(animateConfetti);
+    else if(confettiCanvas) confettiCanvas.classList.remove("show");
+  }
+
+  /* ---------- 渲染 ---------- */
+  function show(page){
+    ["setup","entry","result"].forEach(function(p){
+      document.getElementById("page-"+p).classList.toggle("active", p===page);
+    });
+  }
+
+  function renderSetup(){
+    document.getElementById("numVal").textContent=state.numPlayers;
+    document.getElementById("targetVal").textContent=state.target;
+  }
+
+  function renderEntry(){
+    document.getElementById("entryRound").textContent="第 "+state.roundNo+" 轮 · 录入本轮得分";
+    var list=document.getElementById("playerList");
+    list.innerHTML="";
+    for(var i=0;i<state.numPlayers;i++){
+      var card=document.createElement("div");
+      card.className="player-card"+(i===state.selected?" sel":"");
+      card.setAttribute("data-i",i);
+      card.innerHTML='<span class="pname">P'+(i+1)+'</span>'+
+                     '<span class="pscore">'+(state.currentRound[i]||0)+'</span>';
+      list.appendChild(card);
+    }
+    loadCalc();
+  }
+
+  function trophySVG(size,color){
+    color=color||"#3B2A6B";
+    return '<svg viewBox="0 0 24 24" width="'+size+'" height="'+size+'" fill="none" stroke="'+color+'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0V4z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg>';
+  }
+
+  function renderResult(){
+    var winner=getWinner();
+    var leader=getLeader();
+    var banner=document.getElementById("banner");
+    var trophyEl=document.getElementById("trophy");
+    trophyEl.classList.toggle("hidden", winner<0);
+    trophyEl.classList.remove("win-bounce");
+    if(winner>=0){
+      banner.className="banner win";
+      banner.innerHTML=trophySVG(26,"#3B2A6B")+" P"+(winner+1)+" 获胜！";
+    }else{
+      banner.className="banner lead";
+      banner.innerHTML=trophySVG(22,"#3B2A6B")+' <span>领先：P'+(leader+1)+"</span>";
+    }
+
+    // 排序（按总分降序，不显示名次数字）
+    var order=[];
+    for(var i=0;i<state.numPlayers;i++) order.push(i);
+    order.sort(function(a,b){ return state.totals[b]-state.totals[a]; });
+
+    var list=document.getElementById("rankList");
+    list.innerHTML="";
+    order.forEach(function(i){
+      var pct=clamp(Math.round(state.totals[i]/state.target*100),0,100);
+      var reached=state.totals[i]>=state.target;
+      var isWin=i===winner;
+      var isLead=(winner<0 && i===leader);
+      var card=document.createElement("div");
+      card.className="rank-card"+(isWin?" win":"")+(isLead?" lead-row":"");
+      var color=reached?"var(--gold)":ACCENT[i%ACCENT.length];
+      card.innerHTML='<span class="pname">P'+(i+1)+'</span>'+
+        '<div class="bar"><div class="fill" style="width:'+pct+'%;background:'+color+';"></div></div>'+
+        '<span class="ptotal">'+(state.totals[i]||0)+'</span>';
+      list.appendChild(card);
+    });
+
+    document.getElementById("btnContinue").classList.toggle("hidden", winner>=0);
+    document.getElementById("btnAgain").classList.toggle("hidden", winner<0);
+    document.getElementById("btnUndo").disabled = state.history.length===0;
+  }
+
+  function render(){
+    show(state.page);
+    if(state.page==="setup") renderSetup();
+    else if(state.page==="entry") renderEntry();
+    else if(state.page==="result") renderResult();
+  }
+
+  /* ---------- 操作 ---------- */
+  function startGame(){
+    state.totals=Array(state.numPlayers).fill(0);
+    state.currentRound=Array(state.numPlayers).fill(0);
+    state.roundNo=1; state.history=[]; state.selected=0; state.winner=-1;
+    state.page="entry"; save(); render();
+  }
+  function goSetup(){
+    state.totals=[]; state.currentRound=[]; state.history=[]; state.roundNo=1;
+    state.selected=0; state.winner=-1; state.page="setup"; save(); render();
+  }
+  function confirmRound(){
+    for(var i=0;i<state.numPlayers;i++) state.totals[i]+=state.currentRound[i];
+    state.history.push(state.currentRound.slice());
+    state.winner=getWinner();
+    state.page="result"; save(); render();
+    if(state.winner>=0){ playFanfare(); launchConfetti(); }
+  }
+  function continueRound(){
+    state.roundNo+=1;
+    state.currentRound=Array(state.numPlayers).fill(0);
+    state.selected=0; state.winner=-1;
+    state.page="entry"; save(); render();
+  }
+  function againGame(){
+    state.totals=Array(state.numPlayers).fill(0);
+    state.currentRound=Array(state.numPlayers).fill(0);
+    state.roundNo=1; state.history=[]; state.selected=0; state.winner=-1;
+    state.page="entry"; save(); render();
+  }
+  function undoRound(){
+    if(state.history.length===0) return;
+    var last=state.history.pop();
+    for(var i=0;i<state.numPlayers;i++) state.totals[i]-=last[i];
+    state.roundNo=Math.max(1,state.roundNo-1);
+    state.currentRound=last.slice();
+    state.selected=0; state.winner=-1;
+    state.page="entry"; save(); render();
+  }
+
+  function debouncedSave(){
+    if(window.__flipSaveT) clearTimeout(window.__flipSaveT);
+    window.__flipSaveT=setTimeout(function(){ save(); },120);
+  }
+  function updateSelectedScore(){
+    var list=document.getElementById("playerList");
+    var card=list.querySelector('.player-card[data-i="'+state.selected+'"]');
+    if(card){ var s=card.querySelector(".pscore"); if(s) s.textContent=(state.currentRound[state.selected]||0); }
+  }
+  /* ---------- 计算器键盘 ---------- */
+  var calcExpr="";          // 当前表达式字符串
+  var calcEvaluated=false;  // 刚按过 =
+  function evalExpr(s){
+    s=String(s).replace(/×/g,"*").replace(/÷/g,"/");
+    s=s.replace(/[+\-*/]$/,"");            // 去掉末尾运算符
+    if(s===""||s==="-") return 0;
+    if(!/^[0-9+\-*/. ]+$/.test(s)) return 0;
+    try{
+      var r=Function('"use strict";return ('+s+')')();
+      if(typeof r!=="number"||!isFinite(r)) return 0;
+      return r;
+    }catch(e){ return 0; }
+  }
+  function fmtNum(n){
+    if(!isFinite(n)) return "0";
+    return String(Math.round(n*1000)/1000);
+  }
+  function renderCalc(){
+    var show=calcExpr===""?"0":calcExpr;
+    show=show.replace(/\*/g,"×").replace(/\//g,"÷").replace(/-/g,"−");
+    document.getElementById("calcExpr").textContent=show;
+    var v=evalExpr(calcExpr);
+    document.getElementById("calcVal").textContent=fmtNum(v);
+    return v;
+  }
+  function commitScore(v){
+    var cv=clamp(Math.round(v),0,999);     // 规则：单轮 0–999
+    state.currentRound[state.selected]=cv;
+    updateSelectedScore(); debouncedSave();
+  }
+  function calcInput(type,val){
+    if(type==="digit"){
+      if(calcEvaluated){ calcExpr=String(val); calcEvaluated=false; }
+      else if(calcExpr===""||calcExpr==="0"){ calcExpr=String(val); }
+      else calcExpr+=String(val);
+    } else if(type==="op"){
+      if(calcEvaluated) calcEvaluated=false;
+      if(calcExpr===""){ if(val==="-") calcExpr="-"; return; }
+      if(/[+\-*/]$/.test(calcExpr)){ calcExpr=calcExpr.slice(0,-1)+val; }
+      else calcExpr+=val;
+    } else if(type==="eq"){
+      if(calcExpr==="") return;
+      var r=evalExpr(calcExpr);
+      calcExpr=fmtNum(r); calcEvaluated=true;
+    } else if(type==="clear"){
+      calcExpr=""; calcEvaluated=false;
+    }
+    var v=renderCalc();
+    commitScore(v);
+  }
+  function loadCalc(){
+    var v=state.currentRound[state.selected]||0;
+    calcExpr=(v===0)?"":String(v);
+    calcEvaluated=true;
+    renderCalc();
+  }
+
+  function handleAct(act){
+    switch(act){
+      case "numMinus": state.numPlayers=clamp(state.numPlayers-1,1,8); save(); renderSetup(); break;
+      case "numPlus":  state.numPlayers=clamp(state.numPlayers+1,1,8); save(); renderSetup(); break;
+      case "targetMinus": state.target=clamp(state.target-50,50,500); save(); renderSetup(); break;
+      case "targetPlus":  state.target=clamp(state.target+50,50,500); save(); renderSetup(); break;
+      case "start": startGame(); break;
+      case "confirm": confirmRound(); break;
+      case "continue": continueRound(); break;
+      case "again": againGame(); break;
+      case "undo": undoRound(); break;
+      case "restart": goSetup(); break;
+    }
+  }
+
+  /* ---------- 事件委托 ---------- */
+  var lastKeyT=0;
+  function handleKey(el){
+    var k=el.dataset.key;
+    if(k==="clear"){ calcInput("clear"); return; }
+    if(k==="eq"){ calcInput("eq"); return; }
+    if(k==="add"){ calcInput("op","+"); return; }
+    if(k==="sub"){ calcInput("op","-"); return; }
+    if(k==="mul"){ calcInput("op","*"); return; }
+    if(k==="div"){ calcInput("op","/"); return; }
+    if(/^[0-9]$/.test(k)){ calcInput("digit",parseInt(k,10)); return; }
+  }
+  // 数字键盘：移动端用 touchstart 接触即触发（最稳，规避 iOS 连续快速点击丢键 / 双击缩放手势吞事件）
+  document.getElementById("app").addEventListener("touchstart",function(e){
+    var el=e.target.closest("[data-key]");
+    if(!el) return;
+    e.preventDefault();          // 阻止后续合成 click，避免重复录入
+    lastKeyT=Date.now();         // 标记刚由触摸处理，click 兜底时自动跳过
+    handleKey(el);
+  }, {passive:false});
+  document.getElementById("app").addEventListener("click",function(e){
+    var el=e.target.closest("[data-act],[data-i],[data-key]");
+    if(!el) return;
+    if(el.dataset.act!==undefined){ handleAct(el.dataset.act); return; }
+    if(el.dataset.i!==undefined){ state.selected=+el.dataset.i; save(); renderEntry(); return; }
+    if(el.dataset.key!==undefined){
+      var now=Date.now();
+      if(now-lastKeyT<700) return;  // 已被 touchstart 处理则跳过，避免重复
+      lastKeyT=now;
+      handleKey(el);
+    }
+  });
+
+  /* ---------- 启动 ---------- */
+  load();
+  // 数据完整性校验：数组长度与人数不一致则回退设置页
+  var valid = state.totals && state.totals.length===state.numPlayers &&
+              state.currentRound && state.currentRound.length===state.numPlayers;
+  if(!valid){
+    state.totals=[]; state.currentRound=[]; state.history=[];
+    state.roundNo=1; state.selected=0; state.winner=-1; state.page="setup";
+  }
+  render();
+  // 兜底：页面关闭/切后台时立即落盘，避免防抖未触发导致最后几次输入丢失
+  window.addEventListener("pagehide",function(){ if(window.__flipSaveT) clearTimeout(window.__flipSaveT); save(); });
+  document.addEventListener("visibilitychange",function(){ if(document.visibilityState==="hidden"){ if(window.__flipSaveT) clearTimeout(window.__flipSaveT); save(); } });
+})();
+</script>
+
+
+
+</body></html>
