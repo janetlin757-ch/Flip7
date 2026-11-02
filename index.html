@@ -10,7 +10,7 @@
     --cream:#F6EEDB;
     --purple:#3B2A6B;
     --gold:#F4C84B;
-    --pink:#E8739B;
+    --pink:#EB3875;
     --ink:#2A2140;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
@@ -64,6 +64,17 @@
 
   /* ---------- 设置页 ---------- */
   .setup-row{display:flex; align-items:center; justify-content:space-between;}
+  .names-box{margin:14px 2px 0;}
+  .names-title{font-size:14px; color:var(--cream); margin-bottom:8px; letter-spacing:.5px;}
+  .names-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:8px;}
+  .name-input{
+    font-family:"Arial Black",Impact,sans-serif; font-size:20px; text-align:center;
+    color:var(--purple); background:var(--cream);
+    border:3px solid var(--purple); border-radius:10px; padding:10px 0;
+    box-shadow:3px 3px 0 var(--purple); width:100%;
+    -webkit-appearance:none; appearance:none; outline:none;
+  }
+  .name-input::placeholder{color:rgba(59,42,107,.35);}
   .setup-label{font-size:18px; font-weight:700; color:var(--purple); letter-spacing:1px;}
   .stepper{display:flex; align-items:center; gap:14px;}
   .step-btn{
@@ -79,11 +90,11 @@
   /* ---------- 按钮 ---------- */
   .btn-primary{
     font-family:"Arial Black",Impact,sans-serif; font-size:21px; letter-spacing:1px; font-weight:600;
-    background:var(--gold); color:var(--purple);
+    background:var(--purple); color:var(--gold);
     border:3px solid var(--purple); border-radius:14px;
-    padding:12px; box-shadow:5px 5px 0 var(--purple); cursor:pointer;
+    padding:10px; box-shadow:5px 5px 0 var(--gold); cursor:pointer;
   }
-  .btn-primary:active{transform:translate(3px,3px); box-shadow:2px 2px 0 var(--purple);}
+  .btn-primary:active{transform:translate(3px,3px); box-shadow:2px 2px 0 var(--gold);}
   .btn-secondary{
     font-family:"Arial Black",Impact,sans-serif; font-size:16px; letter-spacing:1px; font-weight:500;
     background:var(--cream); color:var(--purple);
@@ -118,7 +129,7 @@
   .player-card.sel .pscore{color:var(--ink);}
 
   /* ---------- 数字键盘 ---------- */
-  .keypad{display:grid; grid-template-columns:repeat(4,1fr); gap:7px;}
+  .keypad{display:grid; grid-template-columns:repeat(4,1fr); gap:8px;}
   .key{
     font-family:"Arial Black",Impact,sans-serif; font-size:21px; color:var(--purple);
     background:var(--cream); border:3px solid var(--purple); border-radius:10px;
@@ -126,9 +137,11 @@
     touch-action:manipulation;
   }
   .key:active{transform:translate(2px,2px); box-shadow:1px 1px 0 var(--purple);}
-  .key.op{background:var(--purple); color:var(--gold); box-shadow:3px 3px 0 var(--gold);}
-  .key.op:active{transform:translate(2px,2px); box-shadow:1px 1px 0 var(--gold);}
-  .key.wide{grid-column:span 1;}
+  .key.op{background:var(--gold); color:var(--purple); box-shadow:3px 3px 0 var(--purple);}
+  .key.op:active{transform:translate(2px,2px); box-shadow:1px 1px 0 var(--purple);}
+  .key.op-rd{background:var(--pink); color:var(--gold); box-shadow:3px 3px 0 var(--purple);}
+  .key.op-rd:active{transform:translate(2px,2px); box-shadow:1px 1px 0 var(--purple);}
+  .key.wide{grid-row:span 2;}
   /* ---------- 计算器面板 ---------- */
   .calc{background:var(--ink); border:3px solid var(--purple); border-radius:10px; padding:5px 12px; box-shadow:3px 3px 0 var(--purple); margin-bottom:0px;}
   .calc-expr{color:var(--cream); font-size:12px; min-height:15px; text-align:right; opacity:.85; letter-spacing:1px; word-break:break-all;}
@@ -168,7 +181,7 @@
   .confetti-canvas.show{display:block;}
   .banner.win{font-size:26px; animation:pop .5s ease;}
   @keyframes pop{0%{transform:scale(.6) rotate(-4deg); opacity:0;}60%{transform:scale(1.08) rotate(-1deg);}100%{transform:scale(1) rotate(-1deg); opacity:1;}}
-  .rank-card.lead-row{border-color:var(--gold); box-shadow:6px 6px 0 var(--gold);}
+  .rank-card.lead-row{border-color:var(--purple); box-shadow:6px 6px 0 var(--gold);}
   .banner svg{vertical-align:middle; margin-right:6px;}
   .lead-ico{margin-left:6px; flex:0 0 auto;}
 
@@ -201,6 +214,10 @@
         </div>
       </div>
     </div>
+    <div class="names-box">
+      <div class="names-title">玩家名字（每格填一个汉字，可留空）</div>
+      <div class="names-grid" id="namesGrid"></div>
+    </div>
     <button class="btn-primary" data-act="start" data-page-node-id="IKAIgqQCXwCJdrYWRzrBJU">开始游戏</button>
     <p class="hint" data-page-node-id="AIaYG9PXRmBYwwHqWHfokr">逐轮为每位玩家录入得分 · 率先达到目标分者获胜</p>
   </section>
@@ -217,19 +234,18 @@
       <button class="key" data-key="7">7</button>
       <button class="key" data-key="8">8</button>
       <button class="key" data-key="9">9</button>
-      <button class="key op" data-key="div">÷</button>
+      <button class="key op-rd" data-key="div">÷</button>
       <button class="key" data-key="4">4</button>
       <button class="key" data-key="5">5</button>
       <button class="key" data-key="6">6</button>
-      <button class="key op" data-key="mul">×</button>
+      <button class="key op-rd" data-key="sub">−</button>
       <button class="key" data-key="1">1</button>
       <button class="key" data-key="2">2</button>
       <button class="key" data-key="3">3</button>
-      <button class="key op" data-key="sub">−</button>
+      <button class="key op wide" data-key="add">+</button>
       <button class="key op" data-key="clear">C</button>
       <button class="key" data-key="0">0</button>
       <button class="key op" data-key="eq">=</button>
-      <button class="key op" data-key="add">+</button>
     </div>
     <button class="btn-primary" data-act="confirm" data-page-node-id="gQjt31UyQIodpLJIe4xEua">确认</button>
   </section>
@@ -267,7 +283,8 @@
 
   function defaultState(){
     return {numPlayers:4,target:200,totals:[],currentRound:[],roundNo:1,
-            selected:0,history:[],page:"setup",winner:-1};
+            selected:0,history:[],page:"setup",winner:-1,
+            names:["P1","P2","P3","P4","P5","P6","P7","P8"]};
   }
   var state=defaultState();
 
@@ -372,6 +389,16 @@
   function renderSetup(){
     document.getElementById("numVal").textContent=state.numPlayers;
     document.getElementById("targetVal").textContent=state.target;
+    var grid=document.getElementById("namesGrid");
+    grid.innerHTML="";
+    for(var i=0;i<state.numPlayers;i++){
+      var inp=document.createElement("input");
+      inp.className="name-input"; inp.maxLength=1; inp.setAttribute("data-i",i);
+      inp.placeholder="P"+(i+1);
+      var nm=state.names[i]||("P"+(i+1));
+      inp.value=(nm==="P"+(i+1))?"":nm;
+      grid.appendChild(inp);
+    }
   }
 
   function renderEntry(){
@@ -382,7 +409,7 @@
       var card=document.createElement("div");
       card.className="player-card"+(i===state.selected?" sel":"");
       card.setAttribute("data-i",i);
-      card.innerHTML='<span class="pname">P'+(i+1)+'</span>'+
+      card.innerHTML='<span class="pname">'+state.names[i]+'</span>'+
                      '<span class="pscore">'+(state.currentRound[i]||0)+'</span>';
       list.appendChild(card);
     }
@@ -403,10 +430,10 @@
     trophyEl.classList.remove("win-bounce");
     if(winner>=0){
       banner.className="banner win";
-      banner.innerHTML=trophySVG(26,"#3B2A6B")+" P"+(winner+1)+" 获胜！";
+      banner.innerHTML=trophySVG(26,"#3B2A6B")+" "+state.names[winner]+" 获胜！";
     }else{
       banner.className="banner lead";
-      banner.innerHTML=trophySVG(22,"#3B2A6B")+' <span>领先：P'+(leader+1)+"</span>";
+      banner.innerHTML=trophySVG(22,"#3B2A6B")+' <span>领先：'+state.names[leader]+"</span>";
     }
 
     // 排序（按总分降序，不显示名次数字）
@@ -424,7 +451,7 @@
       var card=document.createElement("div");
       card.className="rank-card"+(isWin?" win":"")+(isLead?" lead-row":"");
       var color=reached?"var(--gold)":ACCENT[i%ACCENT.length];
-      card.innerHTML='<span class="pname">P'+(i+1)+'</span>'+
+      card.innerHTML='<span class="pname">'+state.names[i]+'</span>'+
         '<div class="bar"><div class="fill" style="width:'+pct+'%;background:'+color+';"></div></div>'+
         '<span class="ptotal">'+(state.totals[i]||0)+'</span>';
       list.appendChild(card);
@@ -444,6 +471,11 @@
 
   /* ---------- 操作 ---------- */
   function startGame(){
+    var inputs=document.getElementById("namesGrid").querySelectorAll(".name-input");
+    for(var i=0;i<state.numPlayers;i++){
+      var v=(inputs[i]?inputs[i].value.trim():"")||"";
+      state.names[i]=(/^[\u4e00-\u9fa5]$/.test(v))?v:("P"+(i+1));
+    }
     state.totals=Array(state.numPlayers).fill(0);
     state.currentRound=Array(state.numPlayers).fill(0);
     state.roundNo=1; state.history=[]; state.selected=0; state.winner=-1;
@@ -607,6 +639,15 @@
     state.roundNo=1; state.selected=0; state.winner=-1; state.page="setup";
   }
   render();
+  // 设置页：玩家名字输入框仅允许一个中文字
+  document.getElementById("namesGrid").addEventListener("input",function(e){
+    var el=e.target;
+    if(el.classList.contains("name-input")){
+      var v=el.value.replace(/[^\u4e00-\u9fa5]/g,"");
+      if(v.length>1) v=v.slice(0,1);
+      el.value=v;
+    }
+  });
   // 兜底：页面关闭/切后台时立即落盘，避免防抖未触发导致最后几次输入丢失
   window.addEventListener("pagehide",function(){ if(window.__flipSaveT) clearTimeout(window.__flipSaveT); save(); });
   document.addEventListener("visibilitychange",function(){ if(document.visibilityState==="hidden"){ if(window.__flipSaveT) clearTimeout(window.__flipSaveT); save(); } });
