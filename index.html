@@ -3,6 +3,7 @@
 <meta charset="UTF-8" data-page-node-id="DZfHh9WkLGSo731q4eKtBk">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" data-page-node-id="VNqFKeqYVkzSK5jGpsxl23">
 <title data-page-node-id="xhiLf718f6eJfC3akkNKe4">FLIP 7 记分牌</title>
+<link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3QgeD0iMyIgeT0iMyIgd2lkdGg9IjU4IiBoZWlnaHQ9IjU4IiByeD0iMTQiIGZpbGw9IiMxRjhDODQiIHN0cm9rZT0iIzNCMkE2QiIgc3Ryb2tlLXdpZHRoPSIzIi8+PHJlY3QgeD0iMTEiIHk9IjExIiB3aWR0aD0iNDIiIGhlaWdodD0iNDIiIHJ4PSI5IiBmaWxsPSIjRjZFRURCIiBzdHJva2U9IiMzQjJBNkIiIHN0cm9rZS13aWR0aD0iMyIvPjxwYXRoIGQ9Ik0yMSAyNCBMNDMgMjQgTDI2IDQ1IiBmaWxsPSJub25lIiBzdHJva2U9IiMzQjJBNkIiIHN0cm9rZS13aWR0aD0iNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PGNpcmNsZSBjeD0iNDciIGN5PSIxNyIgcj0iNSIgZmlsbD0iI0VCMzg3NSIvPjwvc3ZnPg==">
 <style data-page-node-id="rP2gO0WLlHIFvt6Jgp4WjB">
   :root{
     --teal:#1F8C84;
@@ -215,7 +216,7 @@
       </div>
     </div>
     <div class="names-box">
-      <div class="names-title">玩家名字（每格填一个汉字，可留空）</div>
+      <div class="names-title">玩家名字（每格填一个汉字 / 英文字母 / 数字，可留空）</div>
       <div class="names-grid" id="namesGrid"></div>
     </div>
     <button class="btn-primary" data-act="start" data-page-node-id="IKAIgqQCXwCJdrYWRzrBJU">开始游戏</button>
@@ -331,6 +332,23 @@
     }catch(e){}
   }
 
+  // 按键短促反馈：提示音 + 震动（盲点也能确认是否点到）
+  function tapFeedback(){
+    try{
+      audioCtx = audioCtx || new (window.AudioContext||window.webkitAudioContext)();
+      if(audioCtx.state==="suspended") audioCtx.resume();
+      var t=audioCtx.currentTime;
+      var o=audioCtx.createOscillator(), g=audioCtx.createGain();
+      o.type="triangle"; o.frequency.value=1000;
+      g.gain.setValueAtTime(0.0001,t);
+      g.gain.exponentialRampToValueAtTime(0.22,t+0.004);
+      g.gain.exponentialRampToValueAtTime(0.0001,t+0.05);
+      o.connect(g); g.connect(audioCtx.destination);
+      o.start(t); o.stop(t+0.06);
+    }catch(e){}
+    try{ if(navigator.vibrate) navigator.vibrate(15); }catch(e){}
+  }
+
   /* ---------- 获胜彩带 ---------- */
   var confettiCanvas, confettiCtx, confettiParticles=[], confettiRAF;
   function launchConfetti(){
@@ -393,7 +411,7 @@
     grid.innerHTML="";
     for(var i=0;i<state.numPlayers;i++){
       var inp=document.createElement("input");
-      inp.className="name-input"; inp.maxLength=1; inp.setAttribute("data-i",i);
+      inp.className="name-input"; inp.setAttribute("data-i",i);
       inp.placeholder="P"+(i+1);
       var nm=state.names[i]||("P"+(i+1));
       inp.value=(nm==="P"+(i+1))?"":nm;
@@ -474,7 +492,7 @@
     var inputs=document.getElementById("namesGrid").querySelectorAll(".name-input");
     for(var i=0;i<state.numPlayers;i++){
       var v=(inputs[i]?inputs[i].value.trim():"")||"";
-      state.names[i]=(/^[\u4e00-\u9fa5]$/.test(v))?v:("P"+(i+1));
+      state.names[i]=(/^[一-鿿A-Za-z0-9]$/.test(v))?v:("P"+(i+1));
     }
     state.totals=Array(state.numPlayers).fill(0);
     state.currentRound=Array(state.numPlayers).fill(0);
@@ -614,18 +632,19 @@
     if(!el) return;
     e.preventDefault();          // 阻止后续合成 click，避免重复录入
     lastKeyT=Date.now();         // 标记刚由触摸处理，click 兜底时自动跳过
+    tapFeedback();
     handleKey(el);
   }, {passive:false});
   document.getElementById("app").addEventListener("click",function(e){
     var el=e.target.closest("[data-act],[data-i],[data-key]");
     if(!el) return;
-    if(el.dataset.act!==undefined){ handleAct(el.dataset.act); return; }
-    if(el.dataset.i!==undefined){ state.selected=+el.dataset.i; save(); renderEntry(); return; }
+    if(el.dataset.act!==undefined){ tapFeedback(); handleAct(el.dataset.act); return; }
+    if(el.dataset.i!==undefined){ tapFeedback(); state.selected=+el.dataset.i; save(); renderEntry(); return; }
     if(el.dataset.key!==undefined){
       var now=Date.now();
       if(now-lastKeyT<700) return;  // 已被 touchstart 处理则跳过，避免重复
       lastKeyT=now;
-      handleKey(el);
+      tapFeedback(); handleKey(el);
     }
   });
 
@@ -639,14 +658,22 @@
     state.roundNo=1; state.selected=0; state.winner=-1; state.page="setup";
   }
   render();
-  // 设置页：玩家名字输入框仅允许一个中文字
+  // 设置页：玩家名字输入框 —— 允许单个「汉字 / 英文字母 / 数字」
+  // 关键点：iOS 拼音输入时，拼音字母会先出现在框里，必须用组合输入事件(composition)
+  // 跳过中间态，否则会被当场清掉导致中文根本组不成字。
+  function sanitizeName(el){
+    var m=el.value.match(/[一-鿿A-Za-z0-9]/g);
+    el.value = m ? m.slice(0,1).join("") : "";
+  }
+  document.getElementById("namesGrid").addEventListener("compositionend",function(e){
+    var el=e.target;
+    if(el.classList.contains("name-input")) sanitizeName(el);
+  });
   document.getElementById("namesGrid").addEventListener("input",function(e){
     var el=e.target;
-    if(el.classList.contains("name-input")){
-      var v=el.value.replace(/[^\u4e00-\u9fa5]/g,"");
-      if(v.length>1) v=v.slice(0,1);
-      el.value=v;
-    }
+    if(!el.classList.contains("name-input")) return;
+    if(e.isComposing) return;   // 拼音/注音组合输入进行中，先不处理
+    sanitizeName(el);
   });
   // 兜底：页面关闭/切后台时立即落盘，避免防抖未触发导致最后几次输入丢失
   window.addEventListener("pagehide",function(){ if(window.__flipSaveT) clearTimeout(window.__flipSaveT); save(); });
